@@ -20,7 +20,8 @@ class SSCClient(object):
     _ssc_url = ""  # Fortify SSC的地址
     _ssc_api_base = ""  # _SSC_URL + "/api/v1"
     # 以下只是Fortify SSC默认的roles列表
-    _ssc_roles_list = ["admin", "appsectester", "developer", "manager", "securitylead", "viewonly", "wiesystem"]
+    _ssc_roles_list = ["admin", "appsectester", "developer",
+                       "manager", "securitylead", "viewonly", "wiesystem"]
     _session = None  # requests的session
     _requests_headers = {"Accept": "application/json",
                          "Content-Type": "application/json;charset=UTF-8"}
@@ -48,8 +49,10 @@ class SSCClient(object):
         :return: fortify当前的roles列表
         """
         url = self._ssc_api_base + "/roles"
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies)
-        logging.debug("func_get_fortify_roles\r\nraw response: {}".format(r.content))
+        r = self._session.get(
+            url, headers=self._requests_headers, cookies=self._requests_cookies)
+        logging.debug(
+            "func_get_fortify_roles\r\nraw response: {}".format(r.content))
         if r.status_code != 200:
             logging.error("func_get_fortify_roles error getting roles")
             return None
@@ -68,17 +71,22 @@ class SSCClient(object):
         """
         payloads = {"limit": 2, "start": "0", "q": user_name}
         url = self._ssc_api_base + '/ldapObjects'
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
-        logging.debug("func_get_fortify_ldap_user_info_by_name {}\r\nraw response: {}".format(user_name, r.content))
+        r = self._session.get(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, params=payloads)
+        logging.debug("func_get_fortify_ldap_user_info_by_name {}\r\nraw response: {}".format(
+            user_name, r.content))
         if r.status_code != 200:
-            logging.error("func_get_fortify_ldap_user_info_by_name error getting user info")
+            logging.error(
+                "func_get_fortify_ldap_user_info_by_name error getting user info")
             return None
         user_info_from_ssc = json.loads(r.content)
         if user_info_from_ssc["count"] > 1:
-            logging.error("func_get_fortify_ldap_user_info_by_name: more than one user matched for {}".format(user_name))
+            logging.error(
+                "func_get_fortify_ldap_user_info_by_name: more than one user matched for {}".format(user_name))
             return None
         if user_info_from_ssc["count"] < 1:
-            logging.error("func_get_fortify_ldap_user_info_by_name: no user matched for {}".format(user_name))
+            logging.error(
+                "func_get_fortify_ldap_user_info_by_name: no user matched for {}".format(user_name))
             return None
         return user_info_from_ssc["data"][0]
 
@@ -89,10 +97,13 @@ class SSCClient(object):
         :return: 用户信息的json, 如果失败(包含多个匹配或无匹配)返回None
         """
         url = self._ssc_api_base + '/ldapObjects/' + str(user_id)
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies)
-        logging.debug("func_get_fortify_ldap_user_info_by_id {} \r\nraw response: {}".format(user_id, r.content))
+        r = self._session.get(
+            url, headers=self._requests_headers, cookies=self._requests_cookies)
+        logging.debug("func_get_fortify_ldap_user_info_by_id {} \r\nraw response: {}".format(
+            user_id, r.content))
         if r.status_code != 200:
-            logging.error("func_get_fortify_ldap_user_info_by_id error getting user info")
+            logging.error(
+                "func_get_fortify_ldap_user_info_by_id error getting user info")
             return None
         user_info_from_ssc = json.loads(r.content)
         return user_info_from_ssc["data"]
@@ -113,17 +124,22 @@ class SSCClient(object):
     def func_get_non_fortify_ldap_user_info(self, user_name):
         url = self._ssc_api_base + '/ldapObjects'
         payloads = {"ldaptype": "USER", "limit": 2, "q": user_name, "start": 0}
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
-        logging.debug("func_get_non_fortify_ldap_user_info {}\r\nraw response: {}".format(user_name, r.content))
+        r = self._session.get(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, params=payloads)
+        logging.debug("func_get_non_fortify_ldap_user_info {}\r\nraw response: {}".format(
+            user_name, r.content))
         if r.status_code != 200:
-            logging.error("func_get_non_fortify_ldap_user_info error getting user info")
+            logging.error(
+                "func_get_non_fortify_ldap_user_info error getting user info")
             return None
         user_info_from_ssc = json.loads(r.content)["data"]
         if len(user_info_from_ssc) > 1:
-            logging.error("func_get_non_fortify_ldap_user_info: more than one user matched for {}".format(user_name))
+            logging.error(
+                "func_get_non_fortify_ldap_user_info: more than one user matched for {}".format(user_name))
             return None
         if len(user_info_from_ssc) < 1:
-            logging.error("func_get_non_fortify_ldap_user_info: no user matched for {}".format(user_name))
+            logging.error(
+                "func_get_non_fortify_ldap_user_info: no user matched for {}".format(user_name))
             return None
         return user_info_from_ssc[0]
 
@@ -147,12 +163,15 @@ class SSCClient(object):
         if len(user_info["roles"]) < 1:
             user_info["roles"] = [{"id": "viewonly"}]
         logging.debug("Adding user to Fortify SSC: \r\n {}".format(user_info))
-        r = self._session.post(url, headers=self._requests_headers, cookies=self._requests_cookies, json=user_info)
+        r = self._session.post(url, headers=self._requests_headers,
+                               cookies=self._requests_cookies, json=user_info)
         if r.status_code == 201:  # created
-            logging.debug("User {} added successfully".format(user_info['name']))
+            logging.debug(
+                "User {} added successfully".format(user_info['name']))
             return True
         else:
-            logging.error("Failed adding user {}, error message \r\n {}".format(user_info['name'], r.content))
+            logging.error("Failed adding user {}, error message \r\n {}".format(
+                user_info['name'], r.content))
             return False
 
     def func_del_ldap_user_by_id(self, user_id):
@@ -163,8 +182,10 @@ class SSCClient(object):
         """
         url = self._ssc_api_base + "/ldapObjects"
         payloads = {"ids": user_id}
-        r = self._session.delete(url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
-        logging.debug("func_del_ldap_user_by_id {}\r\nraw response {}".format(user_id, r.content))
+        r = self._session.delete(
+            url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
+        logging.debug(
+            "func_del_ldap_user_by_id {}\r\nraw response {}".format(user_id, r.content))
         if r.status_code == 200:
             return True
         else:
@@ -194,7 +215,8 @@ class SSCClient(object):
         url = self._ssc_api_base + "/ldapObjects/" + str(user_id)
         user_info = self.func_get_fortify_ldap_user_info_by_id(user_id)
         if user_info is None:
-            logging.error("func_update_roles_for_ldap_user_by_user_id failed: invalid user id {}".format(user_id))
+            logging.error(
+                "func_update_roles_for_ldap_user_by_user_id failed: invalid user id {}".format(user_id))
             return False
         user_info["roles"] = []
         # role validation
@@ -206,11 +228,15 @@ class SSCClient(object):
                 user_info["roles"].append({"id": _})
         if len(user_info["roles"]) < 1:
             user_info["roles"] = [{"id": "viewonly"}]
-        logging.debug("Updating user id {} to Fortify SSC: \r\n {}".format(user_id, user_info))
-        r = self._session.put(url, headers=self._requests_headers, cookies=self._requests_cookies, json=user_info)
-        logging.debug("func_update_roles_for_ldap_user_by_user_id {} \r\nraw response {}".format(user_id, r.content))
+        logging.debug(
+            "Updating user id {} to Fortify SSC: \r\n {}".format(user_id, user_info))
+        r = self._session.put(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, json=user_info)
+        logging.debug("func_update_roles_for_ldap_user_by_user_id {} \r\nraw response {}".format(
+            user_id, r.content))
         if r.status_code == 200:  # updated
-            logging.debug("func_update_roles_for_ldap_user_by_user_id {} updated successfully".format(user_id))
+            logging.debug(
+                "func_update_roles_for_ldap_user_by_user_id {} updated successfully".format(user_id))
             return True
         else:
             logging.error("Failed: func_update_roles_to_ldap_user_by_user_id {}, error message \r\n {}".
@@ -228,7 +254,8 @@ class SSCClient(object):
         """
         user_id = self.func_get_fortify_ldap_user_id_by_name(user_name)
         if user_id is None:
-            logging.error("func_update_roles_for_ldap_user_by_user_name failed: invalid user name {}".format(user_name))
+            logging.error(
+                "func_update_roles_for_ldap_user_by_user_name failed: invalid user name {}".format(user_name))
             return False
         return self.func_update_roles_for_ldap_user_by_user_id(user_id, roles)
 
@@ -243,30 +270,38 @@ class SSCClient(object):
         url = self._ssc_api_base + "/projectVersions"
         payloads = {"limit": 1, "start": 0, "includeInactive": True, "myAssignedIssues": False, "orderby": "id",
                     "fields": "id,name,project,active,committed,owner,description,creationDate,currentState"}
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
-        logging.debug("func_get_project_version_dict get counts\r\nraw content: {}".format(r.content))
+        r = self._session.get(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, params=payloads)
+        logging.debug(
+            "func_get_project_version_dict get counts\r\nraw content: {}".format(r.content))
         if r.status_code != 200:
-            logging.error("func_get_project_version_dict failed: {}".format(r.content))
+            logging.error(
+                "func_get_project_version_dict failed: {}".format(r.content))
             return self._project_version_mapping
 
         project_version_count = int(json.loads(r.content)["count"])
         payloads = {"limit": project_version_count, "start": 0, "includeInactive": True, "myAssignedIssues": False,
                     "orderby": "id",
                     "fields": "id,name,project,active,committed,owner,description,creationDate,currentState"}
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
-        logging.debug("func_get_project_version_dict get full list\r\nraw content: {}".format(r.content))
+        r = self._session.get(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, params=payloads)
+        logging.debug(
+            "func_get_project_version_dict get full list\r\nraw content: {}".format(r.content))
         if r.status_code != 200:
-            logging.error("func_get_project_version_dict failed: {}".format(r.content))
+            logging.error(
+                "func_get_project_version_dict failed: {}".format(r.content))
             return self._project_version_mapping
 
         data = json.loads(r.content)["data"]
         self._project_version_mapping = defaultdict(set)
         for _ in data:
-            project_info = Project_Info(int(_["project"]["id"]), _["project"]["name"])
+            project_info = Project_Info(
+                int(_["project"]["id"]), _["project"]["name"])
             version_info = Version_Info(int(_["id"]), _["name"])
             self._project_version_mapping[project_info].add(version_info)
 
-        logging.debug("func_get_project_version_dict raw_mapping\r\n{}".format(self._project_version_mapping))
+        logging.debug("func_get_project_version_dict raw_mapping\r\n{}".format(
+            self._project_version_mapping))
         return self._project_version_mapping
 
     def func_update_project_version_dict(self):
@@ -279,25 +314,32 @@ class SSCClient(object):
         :param user_id:
         :return: 用户权限project与version对应的dict 得到{project_info1:[version_info1_1, version_info1_2], ...}
         """
-        url = self._ssc_api_base + "/authEntities/" + str(user_id) + "/projectVersions"
+        url = self._ssc_api_base + "/authEntities/" + \
+            str(user_id) + "/projectVersions"
         payloads = {"limit": 1, "start": 0}
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
-        logging.debug("func_get_project_version_by_user_id get counts\r\nraw content: {}".format(r.content))
+        r = self._session.get(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, params=payloads)
+        logging.debug(
+            "func_get_project_version_by_user_id get counts\r\nraw content: {}".format(r.content))
         if r.status_code != 200:
-            logging.error("func_get_project_version_by_user_id failed: {}".format(r.content))
+            logging.error(
+                "func_get_project_version_by_user_id failed: {}".format(r.content))
             return None
 
         project_version_count = int(json.loads(r.content)["count"])
         ret_dict = defaultdict(set)
         payloads = {"limit": project_version_count, "start": 0}
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies, params=payloads)
+        r = self._session.get(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, params=payloads)
         data = json.loads(r.content)["data"]
         for _ in data:
-            project_info = Project_Info(int(_["project"]["id"]), _["project"]["name"])
+            project_info = Project_Info(
+                int(_["project"]["id"]), _["project"]["name"])
             version_info = Version_Info(int(_["id"]), _["name"])
             ret_dict[project_info].add(version_info)
 
-        logging.debug("func_get_project_version_by_user_id raw_mapping\r\n{}".format(ret_dict))
+        logging.debug(
+            "func_get_project_version_by_user_id raw_mapping\r\n{}".format(ret_dict))
         return ret_dict
 
     def func_get_project_version_by_ldap_user_name(self, user_name):
@@ -321,8 +363,10 @@ class SSCClient(object):
         :param version_ids: list, 需要添加访问权限的version id列表，比如[1,2,3]
         :return: True表示成功, False表示失败
         """
-        url = self._ssc_api_base + "/authEntities/" + str(user_id) + "/projectVersions/action"
-        already_auth_versions = func_extract_all_version_ids(self.func_get_project_version_by_user_id(user_id))
+        url = self._ssc_api_base + "/authEntities/" + \
+            str(user_id) + "/projectVersions/action"
+        already_auth_versions = func_extract_all_version_ids(
+            self.func_get_project_version_by_user_id(user_id))
         if len(set(already_auth_versions).intersection(set(version_ids))) > 0:
             logging.error("func_add_project_version_auth_by_user_id error: conflict version ids {}".
                           format(set(already_auth_versions).intersection(set(version_ids))))
@@ -330,7 +374,8 @@ class SSCClient(object):
 
         # TODO: 增加version_ids的有效性判断
         payloads = {"ids": version_ids, "type": "assign"}
-        r = self._session.post(url, headers=self._requests_headers, cookies=self._requests_cookies, json=payloads)
+        r = self._session.post(url, headers=self._requests_headers,
+                               cookies=self._requests_cookies, json=payloads)
         logging.debug("func_add_project_version_auth_by_user_id {} version ids {}\r\nraw response{}".
                       format(user_id, version_ids, r.content))
         if r.status_code == 200:
@@ -348,6 +393,46 @@ class SSCClient(object):
         """
         user_id = self.func_get_fortify_ldap_user_id_by_name(user_name)
         if user_id is None:
-            logging.error("func_add_project_version_auth_by_ldap_user_name {} invalid user name".format(user_name))
+            logging.error(
+                "func_add_project_version_auth_by_ldap_user_name {} invalid user name".format(user_name))
             return False
         return self.func_add_project_version_auth_by_user_id(user_id, version_ids)
+
+    def func_get_issue_count_by_id(self, version_id, showsuppressed="false", showhidden="false"):
+        """
+        根据projectVersionId获取结果
+        """
+        url = self._ssc_api_base + \
+            "/projectVersions/{}/issueGroups".format(version_id)
+        payloads = {"groupingtype": "FOLDER", "filterset": "a243b195-0a59-3f8b-1403-d55b7a7d78e6",
+                    "showhidden": showhidden, "showremoved": "false", "showshortfileNames": "false", "showsuppressed": showsuppressed}
+        r = self._session.get(url, headers=self._requests_headers,
+                              cookies=self._requests_cookies, params=payloads)
+        if r.status_code == 200:
+            data = json.loads(r.content)['data']
+            return data
+        else:
+            return None
+    
+    def func_delete_by_id(self, version_id):
+        """
+        根据id删除project_version
+        成功返回true, 失败返回false
+        """
+        url = self._ssc_api_base + "/projectVersions/{}?hideProgress=true"
+        url = url.format(version_id)
+        r = self._session.delete(url, headers=self._requests_headers, cookies=self._requests_cookies)
+        if r.status_code == 200:
+            return True
+        else:
+            return False
+
+    def func_get_artifact_info(self, version_id):
+        url = self._ssc_api_base + "/projectVersions/{}/artifacts?hideProgress=true&embed=scans&limit=1&start=0"
+        url = url.format(version_id)
+        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies)
+        if r.status_code == 200:
+            data = json.loads(r.content)['data']
+            return data
+        else:
+            return None

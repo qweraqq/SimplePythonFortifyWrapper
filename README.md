@@ -38,4 +38,20 @@ ssc_client.func_get_project_version_by_ldap_user_name("firstname.lastname")
 # 为LDAP用户增加version的访问权限
 ssc_client.func_add_project_version_auth_by_ldap_user_name("firstname.lastname", [1, 2, 3])  # 1,2,3表示version id
 
+
+# 获取扫描结果
+project_version_mapping = ssc_client.func_get_project_version_dict()
+ga_release_mapping = {}
+# 根据实际要求filter出需要获取结果的project+version
+for _ in project_version_mapping.keys():
+    for tmp in project_version_mapping[_]:
+        if tmp.name == "Your_Version": # custom
+            ga_release_mapping[_.name] = tmp.id
+
+version_id = ga_release_mapping[project_name]
+r = ssc_client.func_get_issue_count_by_id(version_id=version_id, showsuppressed="true", showhidden="true")
+result = defaultdict(int)
+for _ in r:
+    result[_['id']] = _['totalCount']
+print("{},{},{},{},{}".format(project_name, result['Critical'], result['High'],result['Medium'], result['Low']))
 ```
