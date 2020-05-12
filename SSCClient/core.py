@@ -33,6 +33,7 @@ class SSCClient(object):
         self._ssc_url = url
         self._ssc_api_base = self._ssc_url + "/api/v1"
         self._session = requests.session()
+        self._requests_cookies = None
 
     def __del__(self):
         if self._session is not None:
@@ -41,6 +42,10 @@ class SSCClient(object):
     def set_auth_cookie(self, auth_cookie=None):
         self._auth_cookie = auth_cookie
         self._requests_cookies = {"JSESSIONID": self._auth_cookie}
+
+    def set_auth_token(self, auth_token=None):
+        self._requests_headers['Authorization'] = "FortifyToken {}".format(auth_token)
+
 
     def func_get_fortify_roles(self):
         """

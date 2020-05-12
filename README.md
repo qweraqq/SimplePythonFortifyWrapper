@@ -13,7 +13,12 @@ from SSCClient.core import SSCClient
 from SSCClient.utils import  func_extract_all_project_names
 
 ssc_client = SSCClient("http://127.0.0.1:8080/ssc")
+
+# Authorization: cookie or FortifyToken
 ssc_client.set_auth_cookie("E75A5DE50330739BEAE8D495D25912E1")  # JSESSIONID
+
+ssc_client.set_auth_token("N2QzYjZjMzUtYmU3Mi00MTc2LTg4ZDEtYjZlOWY3MDE5YzVj") # Fortify Token
+
 
 # 获取当前Fortify SSC支持的所有roles, SSC默认为["admin", "appsectester", "developer", "manager", "securitylead", "viewonly", "wiesystem"]
 ssc_client.func_get_fortify_roles()
