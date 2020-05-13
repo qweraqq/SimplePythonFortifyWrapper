@@ -44,8 +44,8 @@ class SSCClient(object):
         self._requests_cookies = {"JSESSIONID": self._auth_cookie}
 
     def set_auth_token(self, auth_token=None):
-        self._requests_headers['Authorization'] = "FortifyToken {}".format(auth_token)
-
+        self._requests_headers['Authorization'] = "FortifyToken {}".format(
+            auth_token)
 
     def func_get_fortify_roles(self):
         """
@@ -418,7 +418,7 @@ class SSCClient(object):
             return data
         else:
             return None
-    
+
     def func_delete_by_id(self, version_id):
         """
         根据id删除project_version
@@ -426,18 +426,87 @@ class SSCClient(object):
         """
         url = self._ssc_api_base + "/projectVersions/{}?hideProgress=true"
         url = url.format(version_id)
-        r = self._session.delete(url, headers=self._requests_headers, cookies=self._requests_cookies)
+        r = self._session.delete(
+            url, headers=self._requests_headers, cookies=self._requests_cookies)
         if r.status_code == 200:
             return True
         else:
             return False
 
-    def func_get_artifact_info(self, version_id):
-        url = self._ssc_api_base + "/projectVersions/{}/artifacts?hideProgress=true&embed=scans&limit=1&start=0"
-        url = url.format(version_id)
-        r = self._session.get(url, headers=self._requests_headers, cookies=self._requests_cookies)
+    def func_get_artifact_info(self, version_id, start=0):
+        url = self._ssc_api_base + \
+            "/projectVersions/{}/artifacts?hideProgress=true&embed=scans&limit=1&start={}"
+        url = url.format(version_id, start)
+        r = self._session.get(
+            url, headers=self._requests_headers, cookies=self._requests_cookies)
         if r.status_code == 200:
             data = json.loads(r.content)['data']
             return data
         else:
             return None
+
+    def func_get_project_version_authentities(self, version_id):
+        """
+{
+  "data":[
+    {
+      "firstName":"default",
+      "lastName":"user",
+      "_href":"http://192.168.22.130:8080/ssc/api/v1/projectVersions/2/authEntities/1",
+      "userPhoto":null,
+      "isLdap":false,
+      "displayName":"default user",
+      "entityName":"admin",
+      "id":1,
+      "ldapDn":null,
+      "type":"User",
+      "email":"my_email@fortify.com"
+    },
+    {
+      "firstName":"firstname",
+      "lastName":"Testuser01",
+      "_href":"http://192.168.22.130:8080/ssc/api/v1/projectVersions/2/authEntities/3",
+      "userPhoto":null,
+      "isLdap":true,
+      "displayName":"firstname Testuser01",
+      "entityName":"firstname",
+      "id":3,
+      "ldapDn":"cn=Testuser01,dc=ph,dc=com",
+      "type":"User",
+      "email":null
+    }
+  ],
+  "count":2,
+  "responseCode":200
+}
+        """
+        url = self._ssc_api_base + "/projectVersions/{}/authEntities?limit=-1"
+        url = url.format(version_id)
+        r = self._session.get(
+            url, headers=self._requests_headers, cookies=self._requests_cookies)
+        if r.status_code == 200:
+            data = json.loads(r.content)['data']
+        else:
+            return None
+
+
+    def func_add_ladpuser_to_projectverion_by_user_id(self, version_id, user_id):
+        url = self._ssc_api_base + "/projectVersions/{}/authEntities"
+        url = url.format(version_id)
+        user_info = []
+        authed_user_list = self.func_get_project_version_authentities(version_id)
+        if authed_user_list is not None:
+            for _ in authed_user_list:
+                user_info.append({"id":_['id'], "isLdap":_["isLdap"]})
+        user_info.append({"id":user_id, "isLdap":True})
+        r = self._session.put(
+            url, headers=self._requests_headers, cookies=self._requests_cookies, json=user_info)
+        if r.status_code == 200:
+            return True
+        else:
+            return False
+
+    
+    def func_add_ladpuser_to_projectverion_by_user_name(self, version_id, user_name):
+        user_id = self.func_get_fortify_ldap_user_id_by_name(user_name)
+        return self.func_add_ladpuser_to_projectverion_by_user_id(version_id, user_id)
