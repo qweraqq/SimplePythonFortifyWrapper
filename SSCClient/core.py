@@ -486,6 +486,7 @@ class SSCClient(object):
             url, headers=self._requests_headers, cookies=self._requests_cookies)
         if r.status_code == 200:
             data = json.loads(r.content)['data']
+            return data
         else:
             return None
 
