@@ -490,16 +490,16 @@ class SSCClient(object):
         else:
             return None
 
-
     def func_add_ladpuser_to_projectverion_by_user_id(self, version_id, user_id):
         url = self._ssc_api_base + "/projectVersions/{}/authEntities"
         url = url.format(version_id)
         user_info = []
-        authed_user_list = self.func_get_project_version_authentities(version_id)
+        authed_user_list = self.func_get_project_version_authentities(
+            version_id)
         if authed_user_list is not None:
             for _ in authed_user_list:
-                user_info.append({"id":_['id'], "isLdap":_["isLdap"]})
-        user_info.append({"id":user_id, "isLdap":True})
+                user_info.append({"id": _['id'], "isLdap": _["isLdap"]})
+        user_info.append({"id": user_id, "isLdap": True})
         r = self._session.put(
             url, headers=self._requests_headers, cookies=self._requests_cookies, json=user_info)
         if r.status_code == 200:
@@ -507,7 +507,55 @@ class SSCClient(object):
         else:
             return False
 
-    
     def func_add_ladpuser_to_projectverion_by_user_name(self, version_id, user_name):
         user_id = self.func_get_fortify_ldap_user_id_by_name(user_name)
         return self.func_add_ladpuser_to_projectverion_by_user_id(version_id, user_id)
+
+    def func_get_folders_by_version_id(self, version_id):
+        url = self._ssc_api_base + "/projectVersions/{}/folders"
+        url = url.format(version_id)
+        r = self._session.get(
+            url, headers=self._requests_headers, cookies=self._requests_cookies)
+        if r.status_code == 200:
+            data = json.loads(r.content)['data']
+            return data
+        else:
+            return None
+
+    def func_suppress_all_issues_by_folder(self, version_id, folder_name):
+        folder_infos = self.func_get_folders_by_version_id(version_id)
+        if folder_infos is None:
+            return False
+
+        folder_uuid = None
+        for folder_info in folder_infos:
+            if folder_info["name"] == folder_name:
+                folder_uuid = folder_info["guid"]
+
+        if folder_uuid is None:
+            logging.error("folder name not found")
+
+        url = self._ssc_api_base + "/projectVersions/{}/issues?start=0&limit=-1&showhidden=false&showremoved=false&showsuppressed=false&showshortfilenames=false&filter={}"
+        url = url.format(version_id, "FOLDER:" + folder_uuid)
+
+        r = self._session.get(
+            url, headers=self._requests_headers, cookies=self._requests_cookies)
+        if r.status_code == 200:
+            issues_ids = []
+            data = json.loads(r.content)['data']
+            payloads = {"issues": [], "suppressed": True}
+            for _ in issues_ids:
+                payloads["issues"].append({"id": _})
+            for _ in data:
+                payloads["issues"].append({"id": _["id"], "revision": _["revision"]})
+
+            url = self._ssc_api_base + "/projectVersions/{}/issues/action/suppress"
+            url = url.format(version_id)
+            r = self._session.post(url, headers=self._requests_headers,
+                                   cookies=self._requests_cookies, json=payloads)
+            if r.status_code == 200:
+                return True
+            else:
+                return False
+        else:
+            return False

@@ -59,4 +59,7 @@ result = defaultdict(int)
 for _ in r:
     result[_['id']] = _['totalCount']
 print("{},{},{},{},{}".format(project_name, result['Critical'], result['High'],result['Medium'], result['Low']))
+
+# 忽略某个目录下的所有issue
+ssc_client.func_suppress_all_issues_by_folder(2, "Medium")
 ```
