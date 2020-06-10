@@ -522,7 +522,7 @@ class SSCClient(object):
         else:
             return None
 
-    def func_suppress_all_issues_by_folder(self, version_id, folder_name):
+    def func_suppress_all_issues_by_folder(self, version_id, folder_name, page_size=50):
         folder_infos = self.func_get_folders_by_version_id(version_id)
         if folder_infos is None:
             return False
@@ -535,17 +535,21 @@ class SSCClient(object):
         if folder_uuid is None:
             logging.error("folder name not found")
 
-        url = self._ssc_api_base + "/projectVersions/{}/issues?start=0&limit=-1&showhidden=false&showremoved=false&showsuppressed=false&showshortfilenames=false&filter={}"
-        url = url.format(version_id, "FOLDER:" + folder_uuid)
+        while True:
+            url = self._ssc_api_base + "/projectVersions/{}/issues?start=0&limit={}&showhidden=false&showremoved=false&showsuppressed=false&showshortfilenames=false&filter={}"
+            url = url.format(version_id, page_size, "FOLDER:" + folder_uuid)
+            r = self._session.get(
+                url, headers=self._requests_headers, cookies=self._requests_cookies)
 
-        r = self._session.get(
-            url, headers=self._requests_headers, cookies=self._requests_cookies)
-        if r.status_code == 200:
-            issues_ids = []
+            if r.status_code != 200:
+                return False
+
+            issues_remained = json.loads(r.content)["count"]
+            if issues_remained == 0:
+                break
+
             data = json.loads(r.content)['data']
             payloads = {"issues": [], "suppressed": True}
-            for _ in issues_ids:
-                payloads["issues"].append({"id": _})
             for _ in data:
                 payloads["issues"].append({"id": _["id"], "revision": _["revision"]})
 
@@ -553,9 +557,7 @@ class SSCClient(object):
             url = url.format(version_id)
             r = self._session.post(url, headers=self._requests_headers,
                                    cookies=self._requests_cookies, json=payloads)
-            if r.status_code == 200:
-                return True
-            else:
+            if r.status_code != 200:
                 return False
-        else:
-            return False
+        
+        return True

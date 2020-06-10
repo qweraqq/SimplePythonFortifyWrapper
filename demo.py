@@ -6,9 +6,9 @@ from SSCClient.utils import  func_extract_all_project_names
 from collections import defaultdict
 
 if __name__ == "__main__":
-    ssc_client = SSCClient("http://192.168.22.130:8080/ssc")
+    ssc_client = SSCClient("https://192.168.1.1/ssc")
     # ssc_client.set_auth_token("OWQzZDVkM2YtZWFmNS00ZGIxLWJkZmQtMTMwZDdkMzhmZmU0")
-    ssc_client.set_auth_cookie("63EB2D379453025F669B1A5F5217CFC1")
+    ssc_client.set_auth_cookie("E58BC67EEB87A6BAFE32778A2C9CB395")
     project_version_mapping = ssc_client.func_get_project_version_dict()
 
     id_list = []
@@ -51,4 +51,5 @@ if __name__ == "__main__":
     # 为用户增加访问project version的权限
     username = "firstname2"
     for version_id in id_list:
-        ssc_client.func_add_ladpuser_to_projectverion_by_user_name(version_id, username)
+        ssc_client.func_suppress_all_issues_by_folder(2, "Low")
+        # ssc_client.func_add_ladpuser_to_projectverion_by_user_name(version_id, username)
